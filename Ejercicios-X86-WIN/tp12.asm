@@ -14,6 +14,9 @@ section		.data
     mode                db  "r",0;modo lectura de archivo binario
     msgErrorOpen        db  "Error al abrir el archivo.",0
     msjPrueba           db  "El elemento es: %s",10,0
+    msjPertenece        db  "El elemento pertenece al conjunto.",10,0
+    msjNoPertenece      db  "El elemento no pertenece al conjunto",10,0
+    msjSeparador        db  "------------------------------------",10,0
     formatoNumero       db  "%hi",0
     formatoString       db  "%s",0
     elemento            db  "%c",0
@@ -21,6 +24,8 @@ section		.data
     msjCantidadInv      db  "La cantidad de conjuntos es nula y/o invalida.",10,0
     msjCantValida       db  "La cantidad de conjuntos es valida.",10,0
     msjInformativo1     db  "La Cantidad de conjuntos leida es: %hi",10,0
+    msjConjuntoEstaInc  db  "El conjunto: %hi esta incluido en el conjunto: %hi.",10,0
+    msjConjuntoNoEstaInc    db  "El conjunto: %hi no esta incluido en el conjunto: %hi.",10,0
     msjOpciones         db  "Opciones:",10,0
     msjPertenecia       db  "1- Pertenencia de un elemento a un conjunto.",10,0
     msjIgualdad         db  "2- Igualdad de dos conjuntos.",10,0
@@ -29,13 +34,14 @@ section		.data
     msjFin              db  "5- Terminar Programa.",10,0
     msjPedirOpcion      db  "La opcion elejida es: ",0
     msjInserElemento    db  "Inserte elemento (Si es un solo caracter alfanumerico acompanielo con un espacio. Ej: 'A '): ",0
-    msjInserNumDeConj   db  "Inserte el numero de conjunto: ",0
-    msjConjA            db  "Conjunto A: { %s }",10,0
-    msjConjB            db  "Conjunto B: { %s }",10,0
-    msjConjC            db  "Conjunto C: { %s }",10,0
-    msjConjD            db  "Conjunto D: { %s }",10,0
-    msjConjE            db  "Conjunto E: { %s }",10,0
-    msjConjF            db  "Conjunto F: { %s }",10,0
+    msjInserNumDeConj   db  "Inserte el numero de conjunto base: ",0
+    msjInserNumDeConj2  db  "Inserte el numero de conjunto a ver inclusion: ",0
+    msjConjA            db  "Conjunto 1: { %s }",10,0
+    msjConjB            db  "Conjunto 2: { %s }",10,0
+    msjConjC            db  "Conjunto 3: { %s }",10,0
+    msjConjD            db  "Conjunto 4: { %s }",10,0
+    msjConjE            db  "Conjunto 5: { %s }",10,0
+    msjConjF            db  "Conjunto 6: { %s }",10,0
     espacioVacio        db  "  ",0
     auxElemento         db  "  ",0 
     minElemento         db  "0",0
@@ -60,6 +66,8 @@ section		.bss
     cantidadConjuntos   resw    1
     opcionSel           resw    1
     numDeConjunto       resw    1
+    numDeConjuntoAux    resw    1
+    estaIncluido        resb    1
 ;-----------------------------------------------------------------------------------------
 section		.text
 main:
@@ -82,6 +90,9 @@ ciclo:
     cmp word[opcionSel],1
     je  opcionPertenencia
 
+    cmp word[opcionSel],3
+    je  opcionInclusion
+
 endProg:
 ret
 
@@ -103,6 +114,32 @@ add rsp,32
 
 opcionPertenencia:
     call pertenencia
+    jmp ciclo
+
+opcionInclusion:
+    call elejirConjuntos
+    call inclusion
+
+    cmp byte[estaIncluido],'S'
+    je decirQueEstaIncluido
+
+    call invocarLineasSeparadoras
+    mov rcx,msjConjuntoNoEstaInc
+    mov rdx,[numDeConjuntoAux]
+    mov r8,[numDeConjunto]
+    sub rsp,32
+    call    printf
+    add rsp,32
+    jmp ciclo
+
+decirQueEstaIncluido:
+    call invocarLineasSeparadoras
+    mov rcx,msjConjuntoEstaInc
+    mov rdx,[numDeConjuntoAux]
+    mov r8,[numDeConjunto]
+    sub rsp,32
+    call    printf
+    add rsp,32
     jmp ciclo
 ;-----------------------------------------------------------------------------------------
 ;Rutinas Internas
@@ -143,11 +180,6 @@ leerArch:
     cmp word[cantidadConjuntos],6
     jg closeFile
 
-mov		rcx,msjCantValida	
-sub     rsp, 32        
-call	printf					
-add     rsp, 32 
-
     mov r12,0
 leerConjuntos:
     mov rcx,registro
@@ -176,10 +208,7 @@ closeFile:
 ret
 ;-----------------------------------------------------------------------------------------
 imprimirConjuntos:
-    mov rcx,saltoDeLinea
-    sub rsp,32
-    call    printf
-    add rsp,32
+    call invocarLineasSeparadoras
     
     mov		rcx,msjInformativo1
     mov     rdx,[cantidadConjuntos]
@@ -241,10 +270,7 @@ fin:
 ret
 ;-----------------------------------------------------------------------------------------
 mostrarOpciones:
-    mov rcx,saltoDeLinea
-    sub rsp,32
-    call    printf
-    add rsp,32
+    call invocarLineasSeparadoras
 
     mov rcx,msjOpciones
     sub rsp,32
@@ -280,6 +306,8 @@ ret
 ;-----------------------------------------------------------------------------------------
 obtenerOpcionValida:
 pedirOpcion:
+    call invocarLineasSeparadoras
+
     mov     rcx,msjPedirOpcion
     sub     rsp,32
     call    printf
@@ -308,72 +336,72 @@ ret
 ;-----------------------------------------------------------------------------------------
 pertenencia:
 invalido:
-    mov rcx,msjInserElemento
-    sub rsp,32
+    mov     rcx,msjInserElemento
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
     mov		rcx,buffer
 	sub     rsp,32
     call    gets
     add     rsp,32
 
-    mov rcx,2
-    lea rsi,[buffer]
-    lea rdi,[auxElemento]
-    rep movsb
+    mov     rcx,2
+    lea     rsi,[buffer]
+    lea     rdi,[auxElemento]
+    rep     movsb
 
-    mov rcx,1
-    lea rsi,[auxElemento]
-    lea rdi,[minElemento]
-    rep cmpsb
-    jl invalido
+    mov     rcx,1
+    lea     rsi,[auxElemento]
+    lea     rdi,[minElemento]
+    rep     cmpsb
+    jl      invalido
 
-    mov rcx,1
-    lea rsi,[auxElemento]
-    lea rdi,[maxElemento]
-    rep cmpsb
-    jg invalido
+    mov     rcx,1
+    lea     rsi,[auxElemento]
+    lea     rdi,[maxElemento]
+    rep     cmpsb
+    jg      invalido
 
-    mov rcx,1
-    lea rsi,[auxElemento+1]
-    lea rdi,[exepcionElemento]
-    rep cmpsb
-    je  validado
+    mov     rcx,1
+    lea     rsi,[auxElemento+1]
+    lea     rdi,[exepcionElemento]
+    rep     cmpsb
+    je      elementoValidado
 
-    mov rcx,1
-    lea rsi,[auxElemento+1]
-    lea rdi,[minElemento]
-    rep cmpsb
-    jl invalido
+    mov     rcx,1
+    lea     rsi,[auxElemento+1]
+    lea     rdi,[minElemento]
+    rep     cmpsb
+    jl      invalido
 
-    mov rcx,1
-    lea rsi,[auxElemento+1]
-    lea rdi,[maxElemento]
-    rep cmpsb
-    jg invalido
+    mov     rcx,1
+    lea     rsi,[auxElemento+1]
+    lea     rdi,[maxElemento]
+    rep     cmpsb
+    jg      invalido
 
-validado:
-    mov rcx,saltoDeLinea
-    sub rsp,32
+elementoValidado:
+    mov     rcx,saltoDeLinea
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
     
-    mov rcx,msjPrueba
-    mov rdx,auxElemento
-    sub rsp,32
+    mov     rcx,msjPrueba
+    mov     rdx,auxElemento
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,saltoDeLinea
-    sub rsp,32
+    mov     rcx,saltoDeLinea
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 numDeConjInvalido:
-    mov rcx,msjInserNumDeConj
-    sub rsp,32
+    mov     rcx,msjInserNumDeConj
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
     mov		rcx,buffer
 	sub     rsp,32
@@ -387,16 +415,189 @@ numDeConjInvalido:
     call    sscanf					
     add     rsp, 32
 
-    cmp rax,1
-    jl numDeConjInvalido
+    cmp     rax,1
+    jl      numDeConjInvalido
 
-    mov ax,word[cantidadConjuntos]
+    mov     ax,word[cantidadConjuntos]
 
-    cmp word[numDeConjunto],1
-    jl numDeConjInvalido
-    cmp word[numDeConjunto],ax
-    jg numDeConjInvalido
+    cmp     word[numDeConjunto],1
+    jl      numDeConjInvalido
+    cmp     word[numDeConjunto],ax
+    jg      numDeConjInvalido
 
+calcDesplaz:
+    mov     rbx,0
+
+    mov     bx,[numDeConjunto]
+    sub     bx,1
+    imul    bx,bx,41
+
+    mov     r10,rbx
+    add     r10,41
+verSiElementoPertenece:
+    cmp     r10,rbx
+    je      noPertenece
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[espacioVacio]
+    rep     cmpsb
+    je      noPertenece
+
+    mov     rcx,2
+    lea     rsi,[auxElemento]
+    lea     rdi,[Conjuntos+rbx]
+    rep     cmpsb
+    je      pertenece
+
+    add     rbx,2
+    jmp     verSiElementoPertenece
 final:
+ret
+
+pertenece:
+    call invocarLineasSeparadoras
+
+    mov     rcx,msjPertenece
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    call invocarLineasSeparadoras
+noPertenece:
+    call invocarLineasSeparadoras
+
+    mov     rcx,msjNoPertenece
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    call invocarLineasSeparadoras
+;-----------------------------------------------------------------------------------------
+elejirConjuntos:
+    numDeCon1:
+    call invocarLineasSeparadoras
+
+    mov     rcx,msjInserNumDeConj
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov		rcx,buffer
+	sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,numDeConjunto
+    sub     rsp, 32        
+    call    sscanf					
+    add     rsp, 32
+
+    cmp     rax,1
+    jl      numDeCon1
+
+    mov     ax,word[cantidadConjuntos]
+
+    cmp     word[numDeConjunto],1
+    jl      numDeCon1
+    cmp     word[numDeConjunto],ax
+    jg      numDeCon1
+
+    numDeCon2:
+    call invocarLineasSeparadoras
+
+    mov     rcx,msjInserNumDeConj2
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    mov		rcx,buffer
+	sub     rsp,32
+    call    gets
+    add     rsp,32
+
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,numDeConjuntoAux
+    sub     rsp, 32        
+    call    sscanf					
+    add     rsp, 32
+
+    cmp     rax,1
+    jl      numDeCon2
+
+    mov     ax,word[cantidadConjuntos]
+
+    cmp     word[numDeConjuntoAux],1
+    jl      numDeCon2
+    cmp     word[numDeConjuntoAux],ax
+    jg      numDeCon2
+ret
+;-----------------------------------------------------------------------------------------
+inclusion:
+    mov     byte[estaIncluido],'N'
+    mov     rax,0
+    mov     rbx,0
+
+    mov     bx,[numDeConjunto]
+    sub     bx,1
+    imul    bx,bx,41
+
+    mov     ax,[numDeConjuntoAux]
+    sub     ax,1
+    imul    ax,ax,41
+
+    mov     r10,rbx
+    add     r10,41
+    mov     r11,rax
+    add     r11,40
+verSiElConjuntoEstaIncluido:
+    cmp         rax,r11
+    jge         elConjEstaIncluido
+
+    cmp         rbx,r10
+    jge         end
+
+    mov         rcx,2
+    lea         rsi,[Conjuntos+rbx]
+    lea         rdi,[espacioVacio]
+    rep         cmpsb
+    je          end
+
+    mov         rcx,2
+    lea         rsi,[espacioVacio]
+    lea         rdi,[Conjuntos+rax]
+    rep         cmpsb
+    je          elConjEstaIncluido
+
+    mov         rcx,2
+    lea         rsi,[Conjuntos+rbx]
+    lea         rdi,[Conjuntos+rax]
+    rep         cmpsb
+    je          elementoEncontrado
+
+    add         rbx,2
+    jmp         verSiElConjuntoEstaIncluido
+
+end:
+ret
+
+elementoEncontrado:
+    mov rbx,r10
+    sub rbx,41
+    add rax,2
+    jmp verSiElConjuntoEstaIncluido
+
+elConjEstaIncluido:
+    mov byte[estaIncluido],'S'
+    jmp end
+;-----------------------------------------------------------------------------------------
+invocarLineasSeparadoras:
+    mov rcx,msjSeparador
+    sub rsp,32
+    call    printf
+    add rsp,32
 ret
 ;-----------------------------------------------------------------------------------------
