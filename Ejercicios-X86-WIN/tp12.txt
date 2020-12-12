@@ -4,4 +4,4 @@ Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 0
 ABADACAEAF                              
 AB                                      
 AFAC                                    
-Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 P 
+Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 0 

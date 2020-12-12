@@ -26,6 +26,8 @@ section		.data
     msjInformativo1     db  "La Cantidad de conjuntos leida es: %hi",10,0
     msjConjuntoEstaInc  db  "El conjunto: %hi esta incluido en el conjunto: %hi.",10,0
     msjConjuntoNoEstaInc    db  "El conjunto: %hi no esta incluido en el conjunto: %hi.",10,0
+    msjConjuntoDiferentes   db  "El conjunto: %hi y el conjunto: %hi no son iguales.",10,0
+    msjConjuntoIguales   db  "El conjunto: %hi y el conjunto: %hi son iguales.",10,0
     msjOpciones         db  "Opciones:",10,0
     msjPertenecia       db  "1- Pertenencia de un elemento a un conjunto.",10,0
     msjIgualdad         db  "2- Igualdad de dos conjuntos.",10,0
@@ -34,8 +36,8 @@ section		.data
     msjFin              db  "5- Terminar Programa.",10,0
     msjPedirOpcion      db  "La opcion elejida es: ",0
     msjInserElemento    db  "Inserte elemento (Si es un solo caracter alfanumerico acompanielo con un espacio. Ej: 'A '): ",0
-    msjInserNumDeConj   db  "Inserte el numero de conjunto base: ",0
-    msjInserNumDeConj2  db  "Inserte el numero de conjunto a ver inclusion: ",0
+    msjInserNumDeConj   db  "Inserte el numero del conjunto 1: ",0
+    msjInserNumDeConj2  db  "Inserte el numero del conjunto 2: ",0
     msjConjA            db  "Conjunto 1: { %s }",10,0
     msjConjB            db  "Conjunto 2: { %s }",10,0
     msjConjC            db  "Conjunto 3: { %s }",10,0
@@ -90,6 +92,9 @@ ciclo:
     cmp word[opcionSel],1
     je  opcionPertenencia
 
+    cmp word[opcionSel],2
+    je  opcionIgualdad
+
     cmp word[opcionSel],3
     je  opcionInclusion
 
@@ -135,6 +140,40 @@ opcionInclusion:
 decirQueEstaIncluido:
     call invocarLineasSeparadoras
     mov rcx,msjConjuntoEstaInc
+    mov rdx,[numDeConjuntoAux]
+    mov r8,[numDeConjunto]
+    sub rsp,32
+    call    printf
+    add rsp,32
+    jmp ciclo
+
+opcionIgualdad:
+    call elejirConjuntos
+    call inclusion
+    cmp byte[estaIncluido],'N'
+    je decirQueNoSonIguales
+
+    mov ax,[numDeConjunto]
+    mov bx,[numDeConjuntoAux]
+    mov word[numDeConjuntoAux],ax
+    mov word[numDeConjunto],bx
+
+    call inclusion
+    cmp byte[estaIncluido],'N'
+    je decirQueNoSonIguales
+
+    call invocarLineasSeparadoras
+    mov rcx,msjConjuntoIguales
+    mov rdx,[numDeConjuntoAux]
+    mov r8,[numDeConjunto]
+    sub rsp,32
+    call    printf
+    add rsp,32
+    jmp ciclo
+
+decirQueNoSonIguales:
+    call invocarLineasSeparadoras
+    mov rcx,msjConjuntoDiferentes
     mov rdx,[numDeConjuntoAux]
     mov r8,[numDeConjunto]
     sub rsp,32
