@@ -1,7 +1,7 @@
 6
 0 1 2 3 4 5 6 7 8 9 A ABB C D E F G K Z 
 Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 0 
-ABADACAEAF                              
+9 8 7 6 5 4 3 2 1                       
 AB                                      
-AFAC                                    
-Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 0 
+AFACA1                                  
+Z K G F E D C B ABA 9 8 7 6 5 4 3 2 1 P 

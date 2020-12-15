@@ -14,8 +14,8 @@ section		.data
     mode                db  "r",0;modo lectura de archivo binario
     msgErrorOpen        db  "Error al abrir el archivo.",0
     msjPrueba           db  "El elemento es: %s",10,0
-    msjPertenece        db  "El elemento pertenece al conjunto.",10,0
-    msjNoPertenece      db  "El elemento no pertenece al conjunto",10,0
+    msjPertenece        db  "El elemento: %s pertenece al conjunto: %hi.",10,0
+    msjNoPertenece      db  "El elemento: %s no pertenece al conjunto: %hi.",10,0
     msjSeparador        db  "------------------------------------",10,0
     formatoNumero       db  "%hi",0
     formatoString       db  "%s",0
@@ -25,9 +25,10 @@ section		.data
     msjCantValida       db  "La cantidad de conjuntos es valida.",10,0
     msjInformativo1     db  "La Cantidad de conjuntos leida es: %hi",10,0
     msjConjuntoEstaInc  db  "El conjunto: %hi esta incluido en el conjunto: %hi.",10,0
-    msjConjuntoNoEstaInc    db  "El conjunto: %hi no esta incluido en el conjunto: %hi.",10,0
-    msjConjuntoDiferentes   db  "El conjunto: %hi y el conjunto: %hi no son iguales.",10,0
-    msjConjuntoIguales   db  "El conjunto: %hi y el conjunto: %hi son iguales.",10,0
+    msjConjuntoNoEstaInc   db  "El conjunto: %hi no esta incluido en el conjunto: %hi.",10,0
+    msjConjuntoDiferentes  db  "El conjunto: %hi y el conjunto: %hi no son iguales.",10,0
+    msjConjuntoIguales  db  "El conjunto: %hi y el conjunto: %hi son iguales.",10,0
+    msjMostrarUnion     db  "El conjunto que proviene de la union de los conjuntos %hi y %hi es: { %s }",10,0
     msjOpciones         db  "Opciones:",10,0
     msjPertenecia       db  "1- Pertenencia de un elemento a un conjunto.",10,0
     msjIgualdad         db  "2- Igualdad de dos conjuntos.",10,0
@@ -49,6 +50,8 @@ section		.data
     minElemento         db  "0",0
     maxElemento         db  "Z",0
     exepcionElemento    db  " ",0
+    vectorAux           db  '                                        ',0
+    vectorParaUniones   db  '                                                                                ',0
 
     registro            times 0  db ''
      conjunto           times 40 db ' '
@@ -73,181 +76,191 @@ section		.bss
 ;-----------------------------------------------------------------------------------------
 section		.text
 main:
-    call abrirArch
+    call    abrirArch
 
-    cmp qword[fileHandle],0 ;Error en apertura?
-    jle errorOpen
+    cmp     qword[fileHandle],0 ;Error en apertura?
+    jle     errorOpen
 
-    call leerArch
-    cmp word[cantidadConjuntos],1
-    jl cantidadInvalida
-    cmp word[cantidadConjuntos],6
-    jg cantidadInvalida
+    call    leerArch
+    cmp     word[cantidadConjuntos],1
+    jl      cantidadInvalida
+    cmp     word[cantidadConjuntos],6
+    jg      cantidadInvalida
 
 ciclo:
-    call imprimirConjuntos
-    call mostrarOpciones
-    call obtenerOpcionValida
+    call    imprimirConjuntos
+    call    mostrarOpciones
+    call    obtenerOpcionValida
 
-    cmp word[opcionSel],1
-    je  opcionPertenencia
+    cmp     word[opcionSel],1
+    je      opcionPertenencia
 
-    cmp word[opcionSel],2
-    je  opcionIgualdad
+    cmp     word[opcionSel],2
+    je      opcionIgualdad
 
-    cmp word[opcionSel],3
-    je  opcionInclusion
+    cmp     word[opcionSel],3
+    je      opcionInclusion
+    
+    cmp     word[opcionSel],4
+    je      opcionUnion
 
 endProg:
 ret
-
+;-----------------------------------------------------------------------------------------
 errorOpen:
-mov rcx,msgErrorOpen
-sub rsp,32
-call printf
-add rsp,32
-
-    jmp endProg
-
-cantidadInvalida:
-mov rcx,msjCantidadInv
-sub rsp,32
-call printf
-add rsp,32
-
-    jmp endProg
-
-opcionPertenencia:
-    call pertenencia
-    jmp ciclo
-
-opcionInclusion:
-    call elejirConjuntos
-    call inclusion
-
-    cmp byte[estaIncluido],'S'
-    je decirQueEstaIncluido
-
-    call invocarLineasSeparadoras
-    mov rcx,msjConjuntoNoEstaInc
-    mov rdx,[numDeConjuntoAux]
-    mov r8,[numDeConjunto]
-    sub rsp,32
+    mov     rcx,msgErrorOpen
+    sub     rsp,32
     call    printf
-    add rsp,32
-    jmp ciclo
+    add     rsp,32
+
+    jmp     endProg
+;-----------------------------------------------------------------------------------------
+cantidadInvalida:
+    mov     rcx,msjCantidadInv
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    jmp     endProg
+;-----------------------------------------------------------------------------------------
+opcionPertenencia:
+    call    pertenencia
+    jmp     ciclo
+;-----------------------------------------------------------------------------------------
+opcionInclusion:
+    call    elejirConjuntos
+    call    inclusion
+
+    cmp     byte[estaIncluido],'S'
+    je      decirQueEstaIncluido
+
+    call    invocarLineasSeparadoras
+    mov     rcx,msjConjuntoNoEstaInc
+    mov     rdx,[numDeConjuntoAux]
+    mov     r8,[numDeConjunto]
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    jmp     ciclo
 
 decirQueEstaIncluido:
-    call invocarLineasSeparadoras
-    mov rcx,msjConjuntoEstaInc
-    mov rdx,[numDeConjuntoAux]
-    mov r8,[numDeConjunto]
-    sub rsp,32
+    call    invocarLineasSeparadoras
+    mov     rcx,msjConjuntoEstaInc
+    mov     rdx,[numDeConjuntoAux]
+    mov     r8,[numDeConjunto]
+    sub     rsp,32
     call    printf
-    add rsp,32
-    jmp ciclo
-
+    add     rsp,32
+    jmp     ciclo
+;-----------------------------------------------------------------------------------------
 opcionIgualdad:
-    call elejirConjuntos
-    call inclusion
-    cmp byte[estaIncluido],'N'
-    je decirQueNoSonIguales
+    call    elejirConjuntos
+    call    inclusion
+    cmp     byte[estaIncluido],'N'
+    je      decirQueNoSonIguales
 
-    mov ax,[numDeConjunto]
-    mov bx,[numDeConjuntoAux]
-    mov word[numDeConjuntoAux],ax
-    mov word[numDeConjunto],bx
+    mov     ax,[numDeConjunto]
+    mov     bx,[numDeConjuntoAux]
+    mov     word[numDeConjuntoAux],ax
+    mov     word[numDeConjunto],bx
 
-    call inclusion
-    cmp byte[estaIncluido],'N'
-    je decirQueNoSonIguales
+    call    inclusion
+    cmp     byte[estaIncluido],'N'
+    je      decirQueNoSonIguales
 
-    call invocarLineasSeparadoras
-    mov rcx,msjConjuntoIguales
-    mov rdx,[numDeConjuntoAux]
-    mov r8,[numDeConjunto]
-    sub rsp,32
+    call    invocarLineasSeparadoras
+    mov     rcx,msjConjuntoIguales
+    mov     rdx,[numDeConjuntoAux]
+    mov     r8,[numDeConjunto]
+    sub     rsp,32
     call    printf
-    add rsp,32
-    jmp ciclo
+    add     rsp,32
+    jmp     ciclo
 
 decirQueNoSonIguales:
-    call invocarLineasSeparadoras
-    mov rcx,msjConjuntoDiferentes
-    mov rdx,[numDeConjuntoAux]
-    mov r8,[numDeConjunto]
-    sub rsp,32
+    call    invocarLineasSeparadoras
+    mov     rcx,msjConjuntoDiferentes
+    mov     rdx,[numDeConjuntoAux]
+    mov     r8,[numDeConjunto]
+    sub     rsp,32
     call    printf
-    add rsp,32
-    jmp ciclo
+    add     rsp,32
+    jmp     ciclo
+;-----------------------------------------------------------------------------------------
+opcionUnion:
+    call    elejirConjuntos
+    call    ordenarConjuntos
+    call    hacerLaUnion
+
+    jmp     ciclo
 ;-----------------------------------------------------------------------------------------
 ;Rutinas Internas
 ;-----------------------------------------------------------------------------------------
 abrirArch:
-    mov rcx,fileName
-    mov rdx,mode
-    sub rsp,32
-    call fopen
-    add rsp,32
-    mov qword[fileHandle],rax
+    mov     rcx,fileName
+    mov     rdx,mode
+    sub     rsp,32
+    call    fopen
+    add     rsp,32
+    mov     qword[fileHandle],rax
 
 ret
 ;-----------------------------------------------------------------------------------------
 leerArch:
-    mov rcx,buffer
-    mov rdx,80
-    mov r8,[fileHandle]
+    mov     rcx,buffer
+    mov     rdx,80
+    mov     r8,[fileHandle]
     sub     rsp, 32        
-    call fgets					
+    call    fgets					
     add     rsp, 32
 
-    cmp rax,0
-    jle closeFile
+    cmp     rax,0
+    jle     closeFile
 
-    mov rcx,buffer
-    mov rdx,formatoNumero
-    mov r8,cantidadConjuntos
+    mov     rcx,buffer
+    mov     rdx,formatoNumero
+    mov     r8,cantidadConjuntos
     sub     rsp, 32        
-    call sscanf					
+    call    sscanf					
     add     rsp, 32
 
-    cmp rax,1
-    jl closeFile
+    cmp     rax,1
+    jl      closeFile
 
-    cmp word[cantidadConjuntos],1
-    jl closeFile
-    cmp word[cantidadConjuntos],6
-    jg closeFile
+    cmp     word[cantidadConjuntos],1
+    jl      closeFile
+    cmp     word[cantidadConjuntos],6
+    jg      closeFile
 
-    mov r12,0
+    mov     r12,0
 leerConjuntos:
-    mov rcx,registro
-    mov rdx,42
-    mov r8,[fileHandle]
+    mov     rcx,registro
+    mov     rdx,42
+    mov     r8,[fileHandle]
     sub     rsp, 32        
-    call fgets					
+    call    fgets					
     add     rsp, 32
 
-    cmp rax,0
-    jle closeFile
+    cmp     rax,0
+    jle     closeFile
 
-    mov rcx,40
-    lea rsi,[conjunto]
-    lea rdi,[Conjuntos+r12]
-    rep movsb
+    mov     rcx,40
+    lea     rsi,[conjunto]
+    lea     rdi,[Conjuntos+r12]
+    rep     movsb
 
-    add r12,41
-    jmp leerConjuntos
+    add     r12,41
+    jmp     leerConjuntos
     
 closeFile:
-    mov rcx,[fileHandle]
+    mov     rcx,[fileHandle]
     sub     rsp, 32 
-    call fclose
+    call    fclose
     add     rsp, 32 
 ret
 ;-----------------------------------------------------------------------------------------
 imprimirConjuntos:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
     
     mov		rcx,msjInformativo1
     mov     rdx,[cantidadConjuntos]
@@ -255,97 +268,97 @@ imprimirConjuntos:
 	call	printf					
 	add     rsp, 32 
 
-    mov rcx,msjConjA
-    mov rdx,ConjuntoA
-    sub rsp,32
+    mov     rcx,msjConjA
+    mov     rdx,ConjuntoA
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    cmp word[cantidadConjuntos],2
-    jl fin
+    cmp     word[cantidadConjuntos],2
+    jl      fin
 
-    mov rcx,msjConjB
-    mov rdx,ConjuntoB
-    sub rsp,32
+    mov     rcx,msjConjB
+    mov     rdx,ConjuntoB
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    cmp word[cantidadConjuntos],3
-    jl fin
+    cmp     word[cantidadConjuntos],3
+    jl      fin
 
-    mov rcx,msjConjC
-    mov rdx,ConjuntoC
-    sub rsp,32
+    mov     rcx,msjConjC
+    mov     rdx,ConjuntoC
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    cmp word[cantidadConjuntos],4
-    jl fin
+    cmp     word[cantidadConjuntos],4
+    jl      fin
 
-    mov rcx,msjConjD
-    mov rdx,ConjuntoD
-    sub rsp,32
+    mov     rcx,msjConjD
+    mov     rdx,ConjuntoD
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    cmp word[cantidadConjuntos],5
-    jl fin
+    cmp     word[cantidadConjuntos],5
+    jl      fin
 
-    mov rcx,msjConjE
-    mov rdx,ConjuntoE
-    sub rsp,32
+    mov     rcx,msjConjE
+    mov     rdx,ConjuntoE
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    cmp word[cantidadConjuntos],6
-    jl fin
+    cmp     word[cantidadConjuntos],6
+    jl      fin
 
-    mov rcx,msjConjF
-    mov rdx,ConjuntoF
-    sub rsp,32
+    mov     rcx,msjConjF
+    mov     rdx,ConjuntoF
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 fin:
 ret
 ;-----------------------------------------------------------------------------------------
 mostrarOpciones:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
-    mov rcx,msjOpciones
-    sub rsp,32
+    mov     rcx,msjOpciones
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,msjPertenecia
-    sub rsp,32
+    mov     rcx,msjPertenecia
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,msjIgualdad
-    sub rsp,32
+    mov     rcx,msjIgualdad
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,msjInclusion
-    sub rsp,32
+    mov     rcx,msjInclusion
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,msjUnion
-    sub rsp,32
+    mov     rcx,msjUnion
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
-    mov rcx,msjFin
-    sub rsp,32
+    mov     rcx,msjFin
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 
 ret
 ;-----------------------------------------------------------------------------------------
 obtenerOpcionValida:
 pedirOpcion:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
     mov     rcx,msjPedirOpcion
     sub     rsp,32
@@ -364,13 +377,13 @@ pedirOpcion:
     call    sscanf
     add     rsp,32
 
-    cmp rax,1
-    jl pedirOpcion
+    cmp     rax,1
+    jl      pedirOpcion
 
-    cmp word[opcionSel],1
-    jl pedirOpcion
-    cmp word[opcionSel],5
-    jg pedirOpcion
+    cmp     word[opcionSel],1
+    jl      pedirOpcion
+    cmp     word[opcionSel],5
+    jg      pedirOpcion
 ret
 ;-----------------------------------------------------------------------------------------
 pertenencia:
@@ -421,18 +434,10 @@ invalido:
     jg      invalido
 
 elementoValidado:
-    mov     rcx,saltoDeLinea
-    sub     rsp,32
-    call    printf
-    add     rsp,32
+    call invocarLineasSeparadoras
     
     mov     rcx,msjPrueba
     mov     rdx,auxElemento
-    sub     rsp,32
-    call    printf
-    add     rsp,32
-
-    mov     rcx,saltoDeLinea
     sub     rsp,32
     call    printf
     add     rsp,32
@@ -495,23 +500,29 @@ final:
 ret
 
 pertenece:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
     mov     rcx,msjPertenece
+    mov     rdx,auxElemento
+    mov     r8,[numDeConjunto]
     sub     rsp,32
     call    printf
     add     rsp,32
 
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
+    jmp     final
 noPertenece:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
     mov     rcx,msjNoPertenece
+    mov     rdx,auxElemento
+    mov     r8,[numDeConjunto]
     sub     rsp,32
     call    printf
     add     rsp,32
 
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
+    jmp     final
 ;-----------------------------------------------------------------------------------------
 elejirConjuntos:
     numDeCon1:
@@ -589,7 +600,7 @@ inclusion:
     imul    ax,ax,41
 
     mov     r10,rbx
-    add     r10,41
+    add     r10,40
     mov     r11,rax
     add     r11,40
 verSiElConjuntoEstaIncluido:
@@ -625,7 +636,7 @@ ret
 
 elementoEncontrado:
     mov rbx,r10
-    sub rbx,41
+    sub rbx,40
     add rax,2
     jmp verSiElConjuntoEstaIncluido
 
@@ -640,3 +651,230 @@ invocarLineasSeparadoras:
     add rsp,32
 ret
 ;-----------------------------------------------------------------------------------------
+ordenarConjuntos:
+    mov     rbx,0
+
+    mov     bx,[numDeConjunto]
+    sub     bx,1
+    imul    bx,bx,41
+
+    mov     rcx,40
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[vectorAux]
+    rep     movsb
+    push    rbx
+
+    call    ordenamiento
+
+    pop     rbx
+    mov     rcx,40
+    lea     rsi,[vectorAux]
+    lea     rdi,[Conjuntos+rbx]
+    rep     movsb
+
+    mov     rbx,0
+
+    mov     bx,[numDeConjuntoAux]
+    sub     bx,1
+    imul    bx,bx,41
+
+    mov     rcx,40
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[vectorAux]
+    rep     movsb
+    push    rbx
+
+    call    ordenamiento
+
+    pop     rbx
+    mov     rcx,40
+    lea     rsi,[vectorAux]
+    lea     rdi,[Conjuntos+rbx]
+    rep     movsb
+ret
+;-----------------------------------------------------------------------------------------
+ordenamiento:
+    mov     rbx,0
+    mov     r10,0
+
+primerfor:
+    cmp     rbx,38
+    jge     finOrdenamiento
+
+segundofor:
+    cmp     r10,38 ;(cada numero = 2 bits * (cant(20) - 1))
+    jge     reiniciarJ
+
+    mov     rcx,1
+    lea     rsi,[espacioVacio]
+    lea     rdi,[vectorAux+r10+2]
+    rep     cmpsb
+    je      reiniciarJ
+
+    mov     rcx,1
+    lea     rsi,[vectorAux+r10]
+    lea     rdi,[vectorAux+r10+2]
+    rep     cmpsb
+    jg      swap ;jl de mayor a menor, jg de menor a mayor
+
+    mov     rcx,1
+    lea     rsi,[vectorAux+r10]
+    lea     rdi,[vectorAux+r10+2]
+    repe    cmpsb
+    je      verificarSegundoCaracter
+
+    jmp     incrementarIndice
+swap:
+    mov     rcx,2
+    lea     rsi,[vectorAux+r10]
+    lea     rdi,[auxElemento]
+    rep     movsb
+
+    mov     rcx,2
+    lea     rsi,[vectorAux+r10+2]
+    lea     rdi,[vectorAux+r10]
+    rep     movsb
+
+    mov     rcx,2
+    lea     rsi,[auxElemento]
+    lea     rdi,[vectorAux+r10+2]
+    rep     movsb
+incrementarIndice:
+    add     r10,2
+    jmp     segundofor
+
+reiniciarJ:
+    mov     r10,0
+    add     rbx,2
+    jmp     primerfor
+
+finOrdenamiento:
+ret
+
+verificarSegundoCaracter:
+    mov     rcx,1
+    lea     rsi,[vectorAux+r10+1]
+    lea     rdi,[vectorAux+r10+3]
+    repe    cmpsb
+    jg      swap
+
+    jmp     incrementarIndice
+;-----------------------------------------------------------------------------------------
+hacerLaUnion:
+    mov     rax,0
+    mov     rbx,0
+
+    mov     bx,[numDeConjunto]
+    sub     bx,1
+    imul    bx,bx,41
+
+    mov     ax,[numDeConjuntoAux]
+    sub     ax,1
+    imul    ax,ax,41
+    
+    mov     r10,rbx
+    add     r10,40
+    mov     r11,rax
+    add     r11,40
+    mov     r12,0
+union:
+    cmp     rax,r11
+    jge     llegueAlFinalSegundoVector
+
+    cmp     rbx,r10
+    jge     llegueAlfinalPrimerVector
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[espacioVacio]
+    rep     cmpsb
+    je      llegueAlfinalPrimerVector
+
+    mov     rcx,2
+    lea     rsi,[espacioVacio]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    je      llegueAlFinalSegundoVector
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    je      agregoAlVectoryAvanzoAmbos
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    jg      agregoAlVectoryAvanzoElSegundo
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    jl      agregoAlVectoryAvanzoElPrimero
+ret
+agregoAlVectoryAvanzoAmbos:
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[vectorParaUniones+r12]
+    rep     movsb
+    
+    add     r12,2
+    add     rbx,2
+    add     rax,2
+    jmp     union
+agregoAlVectoryAvanzoElSegundo:
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rax]
+    lea     rdi,[vectorParaUniones+r12]
+    rep     movsb
+
+    add     r12,2
+    add     rax,2
+    jmp     union
+agregoAlVectoryAvanzoElPrimero:
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[vectorParaUniones+r12]
+    rep     movsb
+
+    add     r12,2
+    add     rbx,2
+    jmp     union
+llegueAlfinalPrimerVector:
+    cmp      rax,r11
+    jge     finUnion
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rax]
+    lea     rdi,[vectorParaUniones+r12]
+    rep     movsb
+    
+    add     r12,2
+    add     rax,2
+    jmp llegueAlfinalPrimerVector
+
+llegueAlFinalSegundoVector:
+    cmp     rbx,r10
+    jge     finUnion
+
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[vectorParaUniones+r12]
+    rep     movsb
+    
+    add     r12,2
+    add     rbx,2
+    jmp llegueAlFinalSegundoVector
+
+finUnion:
+    call invocarLineasSeparadoras
+    mov rcx,msjMostrarUnion
+    mov rdx,[numDeConjuntoAux]
+    mov r8,[numDeConjunto]
+    mov r9,vectorParaUniones
+    sub rsp,32
+    call    printf
+    add rsp,32
+ret
