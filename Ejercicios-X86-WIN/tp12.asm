@@ -434,7 +434,7 @@ invalido:
     jg      invalido
 
 elementoValidado:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
     
     mov     rcx,msjPrueba
     mov     rdx,auxElemento
@@ -526,7 +526,7 @@ noPertenece:
 ;-----------------------------------------------------------------------------------------
 elejirConjuntos:
     numDeCon1:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
     mov     rcx,msjInserNumDeConj
     sub     rsp,32
@@ -556,7 +556,7 @@ elejirConjuntos:
     jg      numDeCon1
 
     numDeCon2:
-    call invocarLineasSeparadoras
+    call    invocarLineasSeparadoras
 
     mov     rcx,msjInserNumDeConj2
     sub     rsp,32
@@ -604,51 +604,51 @@ inclusion:
     mov     r11,rax
     add     r11,40
 verSiElConjuntoEstaIncluido:
-    cmp         rax,r11
-    jge         elConjEstaIncluido
+    cmp     rax,r11
+    jge     elConjEstaIncluido
 
-    cmp         rbx,r10
-    jge         end
+    cmp     rbx,r10
+    jge     end
 
-    mov         rcx,2
-    lea         rsi,[Conjuntos+rbx]
-    lea         rdi,[espacioVacio]
-    rep         cmpsb
-    je          end
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[espacioVacio]
+    rep     cmpsb
+    je      end
 
-    mov         rcx,2
-    lea         rsi,[espacioVacio]
-    lea         rdi,[Conjuntos+rax]
-    rep         cmpsb
-    je          elConjEstaIncluido
+    mov     rcx,2
+    lea     rsi,[espacioVacio]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    je      elConjEstaIncluido
 
-    mov         rcx,2
-    lea         rsi,[Conjuntos+rbx]
-    lea         rdi,[Conjuntos+rax]
-    rep         cmpsb
-    je          elementoEncontrado
+    mov     rcx,2
+    lea     rsi,[Conjuntos+rbx]
+    lea     rdi,[Conjuntos+rax]
+    rep     cmpsb
+    je      elementoEncontrado
 
-    add         rbx,2
-    jmp         verSiElConjuntoEstaIncluido
+    add     rbx,2
+    jmp     verSiElConjuntoEstaIncluido
 
 end:
 ret
 
 elementoEncontrado:
-    mov rbx,r10
-    sub rbx,40
-    add rax,2
-    jmp verSiElConjuntoEstaIncluido
+    mov     rbx,r10
+    sub     rbx,40
+    add     rax,2
+    jmp     verSiElConjuntoEstaIncluido
 
 elConjEstaIncluido:
-    mov byte[estaIncluido],'S'
-    jmp end
+    mov     byte[estaIncluido],'S'
+    jmp     end
 ;-----------------------------------------------------------------------------------------
 invocarLineasSeparadoras:
-    mov rcx,msjSeparador
-    sub rsp,32
+    mov     rcx,msjSeparador
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 ret
 ;-----------------------------------------------------------------------------------------
 ordenarConjuntos:
@@ -843,7 +843,7 @@ agregoAlVectoryAvanzoElPrimero:
     add     rbx,2
     jmp     union
 llegueAlfinalPrimerVector:
-    cmp      rax,r11
+    cmp     rax,r11
     jge     finUnion
 
     mov     rcx,2
@@ -853,7 +853,7 @@ llegueAlfinalPrimerVector:
     
     add     r12,2
     add     rax,2
-    jmp llegueAlfinalPrimerVector
+    jmp     llegueAlfinalPrimerVector
 
 llegueAlFinalSegundoVector:
     cmp     rbx,r10
@@ -866,15 +866,16 @@ llegueAlFinalSegundoVector:
     
     add     r12,2
     add     rbx,2
-    jmp llegueAlFinalSegundoVector
+    jmp     llegueAlFinalSegundoVector
 
 finUnion:
-    call invocarLineasSeparadoras
-    mov rcx,msjMostrarUnion
-    mov rdx,[numDeConjuntoAux]
-    mov r8,[numDeConjunto]
-    mov r9,vectorParaUniones
-    sub rsp,32
+    call    invocarLineasSeparadoras
+    mov     rcx,msjMostrarUnion
+    mov     rdx,[numDeConjuntoAux]
+    mov     r8,[numDeConjunto]
+    mov     r9,vectorParaUniones
+    sub     rsp,32
     call    printf
-    add rsp,32
+    add     rsp,32
 ret
+;-----------------------------------------------------------------------------------------
