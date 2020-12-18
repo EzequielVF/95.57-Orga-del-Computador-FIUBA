@@ -13,6 +13,9 @@ section		.data
     fileName            db  "tp12.txt",0
     mode                db  "r",0;modo lectura de archivo binario
     msgErrorOpen        db  "Error al abrir el archivo.",0
+    msgErrorOpcion      db  "Numero de opcion invalida, pruebe nuevamente.",10,0
+    msgErrorElemento    db  "Elemento Invalido, pruebe nuevamente.",10,0
+    msgErrorConjunto    db  "Numero de conjunto invalido, pruebe nuevamente",10,0
     msjPrueba           db  "El elemento es: %s",10,0
     msjPertenece        db  "El elemento: %s pertenece al conjunto: %hi.",10,0
     msjNoPertenece      db  "El elemento: %s no pertenece al conjunto: %hi.",10,0
@@ -21,6 +24,8 @@ section		.data
     formatoString       db  "%s",0
     elemento            db  "%c",0
     saltoDeLinea        db  "",10,0
+    msjInfoPertenencia  db  "El Conjunto 1 sera el conjunto en el que se verificara si el elemento se encuentra.",10,0
+    msjInfoInclusion    db  "El Conjunto 1 sera el base y el Conjunto 2 es el que se verificara si esta incluido en el conjunto base.",10,0
     msjCantidadInv      db  "La cantidad de conjuntos es nula y/o invalida.",10,0
     msjCantValida       db  "La cantidad de conjuntos es valida.",10,0
     msjInformativo1     db  "La Cantidad de conjuntos leida es: %hi",10,0
@@ -104,6 +109,9 @@ ciclo:
     cmp     word[opcionSel],4
     je      opcionUnion
 
+    cmp     word[opcionSel],5
+    je      endProg
+
 endProg:
 ret
 ;-----------------------------------------------------------------------------------------
@@ -124,10 +132,20 @@ cantidadInvalida:
     jmp     endProg
 ;-----------------------------------------------------------------------------------------
 opcionPertenencia:
+    mov     rcx,msjInfoPertenencia
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
     call    pertenencia
     jmp     ciclo
 ;-----------------------------------------------------------------------------------------
 opcionInclusion:
+    mov     rcx,msjInfoInclusion
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    
     call    elejirConjuntos
     call    inclusion
 
@@ -381,12 +399,21 @@ pedirOpcion:
     jl      pedirOpcion
 
     cmp     word[opcionSel],1
-    jl      pedirOpcion
+    jl      opcionInvalida
     cmp     word[opcionSel],5
-    jg      pedirOpcion
+    jg      opcionInvalida
 ret
+
+opcionInvalida:
+    mov     rcx,msgErrorOpcion
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+
+    jmp     pedirOpcion
 ;-----------------------------------------------------------------------------------------
 pertenencia:
+    call    invocarLineasSeparadoras
 invalido:
     mov     rcx,msjInserElemento
     sub     rsp,32
@@ -407,13 +434,13 @@ invalido:
     lea     rsi,[auxElemento]
     lea     rdi,[minElemento]
     rep     cmpsb
-    jl      invalido
+    jl      elementoInvalido
 
     mov     rcx,1
     lea     rsi,[auxElemento]
     lea     rdi,[maxElemento]
     rep     cmpsb
-    jg      invalido
+    jg      elementoInvalido
 
     mov     rcx,1
     lea     rsi,[auxElemento+1]
@@ -425,13 +452,22 @@ invalido:
     lea     rsi,[auxElemento+1]
     lea     rdi,[minElemento]
     rep     cmpsb
-    jl      invalido
+    jl      elementoInvalido
 
     mov     rcx,1
     lea     rsi,[auxElemento+1]
     lea     rdi,[maxElemento]
     rep     cmpsb
-    jg      invalido
+    jg      elementoInvalido
+
+    jmp     elementoValidado
+
+elementoInvalido:
+    mov     rcx,msgErrorElemento
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    jmp     invalido
 
 elementoValidado:
     call    invocarLineasSeparadoras
@@ -460,14 +496,23 @@ numDeConjInvalido:
     add     rsp, 32
 
     cmp     rax,1
-    jl      numDeConjInvalido
+    jl      errorNumConj
 
     mov     ax,word[cantidadConjuntos]
 
     cmp     word[numDeConjunto],1
-    jl      numDeConjInvalido
+    jl      errorNumConj
     cmp     word[numDeConjunto],ax
-    jg      numDeConjInvalido
+    jg      errorNumConj
+
+    jmp     calcDesplaz
+
+errorNumConj:
+    mov     rcx,msgErrorConjunto
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    jmp     numDeConjInvalido
 
 calcDesplaz:
     mov     rbx,0
@@ -546,14 +591,14 @@ elejirConjuntos:
     add     rsp, 32
 
     cmp     rax,1
-    jl      numDeCon1
+    jl      errorConj1
 
     mov     ax,word[cantidadConjuntos]
 
     cmp     word[numDeConjunto],1
-    jl      numDeCon1
+    jl      errorConj1
     cmp     word[numDeConjunto],ax
-    jg      numDeCon1
+    jg      errorConj1
 
     numDeCon2:
     call    invocarLineasSeparadoras
@@ -576,15 +621,29 @@ elejirConjuntos:
     add     rsp, 32
 
     cmp     rax,1
-    jl      numDeCon2
+    jl      errorConj2
 
     mov     ax,word[cantidadConjuntos]
 
     cmp     word[numDeConjuntoAux],1
-    jl      numDeCon2
+    jl      errorConj2
     cmp     word[numDeConjuntoAux],ax
-    jg      numDeCon2
+    jg      errorConj2
 ret
+
+errorConj1:
+    mov     rcx,msgErrorConjunto
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    jmp     numDeCon1
+
+errorConj2:
+    mov     rcx,msgErrorConjunto
+    sub     rsp,32
+    call    printf
+    add     rsp,32
+    jmp     numDeCon2
 ;-----------------------------------------------------------------------------------------
 inclusion:
     mov     byte[estaIncluido],'N'
