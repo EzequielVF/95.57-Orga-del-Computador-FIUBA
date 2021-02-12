@@ -1,0 +1,41 @@
+1.Dado A que representa la configuración en base 8 de un número almacenado en formato BPF c/signo de 24 bits y B que representa la configuración en base 10 de otro número almacenado en formato zoneado de 3 bytes se pide:
+
+ A = 166140(8)
+
+B = 16053714(10)
+
+ a.  Indicar cuales son los números almacenados en base 10.
+
+b.   Restarle a A el número de padrón (A-PADRÓN) en formato BPF c/signo de 24 bits indicando la validez del resultado.
+
+c.  Tomar el valor del resultado del punto anterior si es válido o el valor de B si no lo fuera y almacenarlo en formato BPFlotante IEEE 754 de precisión simple, dando su configuración hexadecimal.
+
+
+NOTA: Para aprobar el ejercicio debe tener correctamente resuelto el 60% del mismo. Las respuestas que no estén justificadas o estén mal justificadas se considerarán erróneas. Por favor lea bien el enunciado
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2.El SMN  lleva el registro de precipitaciones (en mm) en una lista cuya dirección de inicio se encuentra almacenada en la celda 400(16). Cada nodo de la lista se encuentra formado por 4 celdas contiguas que contiene:
+
+la 1era celda el código de región
+la 2da  la cantidad de mm
+la 3ra la dirección al siguiente nodo (El final de la lista (L) se indica con un valor -1 en la última celda del último nodo)
+Se pide realizar un programa ABACUS con punto de carga en la celda 300(16) que recorra la lista (L) y genere un vector (V) con comienzo en la celda 100(16) cuyo contenido sean:
+
+Para los padrones terminados en nro PAR → las direcciones de los nodos cuya cantidad en mm sea mayor a la cantidad que se encuentra almacenado en la celda 401.
+Para los padrones terminado en nro IMPAR → la cantidad en mm de aquellas regiones cuyo código es mayor al almacenado en la celda 402. 
+Marcar el final del vector (V) con un valor –1 en la última celda.
+
+
+Datos de la máquina: L(RPI) = 12 bits; L(CO) = 4 bits
+
+Código de operaciones:
+
+0 – Carga inmediata      3 – Suma                                          8 – Bifurcación si (AC) > 0
+
+1 – Carga                         4 – Not (AC)                                    9 – Bifurcación si (AC) < 0
+
+2 – Almacenar             7 – Bifurcación si (AC) = 0          F – Fin de programa
+
+NOTA: Para aprobar el ejercicio debe tener correctamente resuelto el 60% del mismo. Las respuestas que no estén justificadas o estén mal justificadas se considerarán erróneas. Por favor lea bien el enunciado.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3.Dada una matriz (M) de 15x15 cuyos elementos son binarios de punto fijo con signo de 16 bits, se pide desarrollar un programa en assembler INTEL que pida el ingreso por teclado de un número de fila i, que  deberá validarlo mediante el uso de una rutina interna, y muestre por pantalla la sumatoria de los elementos de la diagonal que va desde (i,1) hasta (15,k) junto con los elementos de la diagonal que va desde (15,k) hasta (r,15)
