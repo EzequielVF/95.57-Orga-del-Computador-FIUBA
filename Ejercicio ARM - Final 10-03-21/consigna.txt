@@ -1,0 +1,1 @@
+Codificar un programa en assembler ARM de 32 bits que recorra un vector de enteros y los imprima por la salida estándar agregando la leyenda “PAR” a continuación de todos aquellos números que así lo sean.
