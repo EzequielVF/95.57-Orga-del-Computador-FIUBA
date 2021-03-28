@@ -3,23 +3,33 @@
 
 	.data
 first_string:
-	.asciz "Hola\n"
+	.asciz "Organizacion "
 second_string:
-	.asciz "Chau\n"
+	.asciz "del "
+third_string:
+	.asciz "Computador\n"
 
 	.text
 	.global _start
 _start:
-	ldr r3, =first_string
-	bl 	print_r3
-	ldr r3, =second_string
-	bl 	print_r3
+	bl 	print_tres_cadenas
 	b 	fin
 
-print_r3:
+print_tres_cadenas:
 	stmfd sp!, {r0,lr}
+
+	ldr r3, =first_string
 	mov r0, r3
 	swi SWI_Print_String
+
+	ldr r3, =second_string
+	mov r0, r3
+	swi SWI_Print_String
+
+	ldr r3, =third_string
+	mov r0, r3
+	swi SWI_Print_String
+
 	ldmfd sp!, {r0,pc}
 
 fin:
