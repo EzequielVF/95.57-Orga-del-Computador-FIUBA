@@ -1,8 +1,8 @@
 # Orga-del-Computador-UBA-
 Cosas que hice en la materia catedra Benitez
 
-- Guia de ejercicios de Intel-x86 resulta
-- Guia de ejercicioas ARM resuelta
+- Guia de ejercicios de Intel-x86 resuelta
+- Guia de ejercicios ARM resuelta
 - Resolucion Parcial 2° 2020
 - Resumen de la teoria
 - Tp de la materia en intel x86
